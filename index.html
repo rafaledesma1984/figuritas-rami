@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0f3460" />
+<title>Figuritas Repetidas Rami</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⭐%3C/text%3E%3C/svg%3E" />
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; font-family: 'Courier New', monospace; color: #e8e8e8;
+         background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+         min-height: 100vh; }
+  input, button, select { font-family: inherit; }
+  button { -webkit-appearance: none; }
+  .hidden { display: none !important; }
+  .center { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; }
+  .card {
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+    border-radius:20px; padding:40px 32px; max-width:340px; width:100%;
+    text-align:center; transition:border-color 0.3s;
+  }
+  .card.err { border-color:#e94560; }
+  .star { font-size:48px; margin-bottom:8px; }
+  h2 { margin:0 0 6px; font-size:20px; font-weight:900; color:#fff;
+       font-family:'Georgia',serif; letter-spacing:1px; }
+  .subtitle { font-size:16px; font-weight:700; color:#e94560; margin-bottom:24px;
+              font-family:'Georgia',serif; letter-spacing:2px; }
+  .hint { color:#888; font-size:13px; margin-bottom:20px; }
+  .input {
+    width:100%; padding:12px 16px; border-radius:10px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15);
+    color:#fff; font-size:16px; outline:none; text-align:center; margin-bottom:14px;
+    transition:border-color 0.3s;
+  }
+  .input.admin { border-color:rgba(251,191,36,0.4); }
+  .input.err { border-color:#e94560; }
+  .btn {
+    width:100%; padding:12px; border-radius:10px; border:none;
+    background:linear-gradient(90deg,#e94560,#c73652);
+    color:#fff; font-size:15px; font-weight:700; cursor:pointer;
+    transition:all 0.2s; letter-spacing:0.5px;
+  }
+  .btn:disabled { background:#333; cursor:default; }
+  .btn-ghost {
+    background:transparent; border:1px solid rgba(255,255,255,0.15);
+    color:#ccc; padding:10px 14px; border-radius:8px; cursor:pointer;
+    font-size:13px; font-weight:600;
+  }
+  .admin-label { font-size:11px; color:#fbbf24; margin-bottom:8px;
+                 display:flex; align-items:center; justify-content:center; gap:6px; }
+  .err-msg { color:#e94560; font-size:12px; margin:0 0 10px; }
+
+  .header {
+    background:linear-gradient(90deg,#16213e,#0f3460);
+    border-bottom:3px solid #e94560; padding:16px 20px 12px;
+    position:sticky; top:0; z-index:10;
+  }
+  .header-inner {
+    max-width:680px; margin:0 auto; display:flex; align-items:center; gap:12px;
+  }
+  .header h1 { margin:0; font-size:clamp(14px,4vw,20px); font-weight:900;
+               color:#fff; text-transform:uppercase; letter-spacing:1px;
+               font-family:'Georgia',serif; }
+  .header h1 span { color:#e94560; }
+  .header-sub { font-size:11px; color:#888; margin-top:2px; }
+  .logout-btn {
+    background:transparent; border:1px solid #333; color:#888;
+    padding:5px 10px; border-radius:6px; cursor:pointer; font-size:11px;
+  }
+  .body { max-width:680px; margin:0 auto; padding:14px 12px 80px; }
+
+  /* Tabs (only for admin) */
+  .tabs {
+    display:flex; gap:6px; margin-bottom:16px;
+    background:rgba(255,255,255,0.03); border-radius:10px; padding:4px;
+  }
+  .tab {
+    flex:1; padding:8px 6px; text-align:center; border-radius:8px;
+    cursor:pointer; font-size:12px; font-weight:700;
+    color:#888; transition:all 0.2s; letter-spacing:0.5px;
+    text-transform:uppercase;
+  }
+  .tab.active { background:#e94560; color:#fff; }
+
+  .greet, .admin-bar {
+    border-radius:12px; padding:12px 16px; margin-bottom:18px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .greet { background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.25); }
+  .admin-bar { background:rgba(233,69,96,0.08); border:1px solid rgba(233,69,96,0.25); }
+  .greet-title { font-weight:800; font-size:15px; color:#fbbf24; }
+  .greet-sub { font-size:12px; color:#aaa; margin-top:2px; }
+  .stats { display:flex; gap:12px; margin-bottom:18px; }
+  .stat { flex:1; border-radius:10px; padding:10px; text-align:center; }
+  .stat-w { background:rgba(251,191,36,0.07); border:1px solid rgba(251,191,36,0.18); }
+  .stat-c { background:rgba(74,222,128,0.07); border:1px solid rgba(74,222,128,0.18); }
+  .stat-num { font-size:22px; font-weight:900; }
+  .stat-w .stat-num { color:#fbbf24; }
+  .stat-c .stat-num { color:#4ade80; }
+  .stat-label { color:#888; font-size:11px; }
+
+  .country-box {
+    margin-bottom:10px; background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.07); border-radius:10px; overflow:hidden;
+  }
+  .country-head {
+    display:flex; align-items:center; gap:8px; padding:8px 14px;
+    background:rgba(255,255,255,0.03); border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  .country-name { font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; padding:10px 14px; }
+  .chip {
+    padding:7px 14px; border-radius:8px; font-family:inherit;
+    font-size:15px; font-weight:700; cursor:pointer; transition:all 0.15s;
+    position:relative; min-width:48px;
+    border:2px solid rgba(255,255,255,0.12);
+    background:rgba(255,255,255,0.04); color:#ccc;
+  }
+  .chip.wanted { border-color:#fbbf24; background:rgba(251,191,36,0.15); color:#fbbf24; }
+  .chip.confirmed { border-color:#4ade80; background:rgba(74,222,128,0.15); color:#4ade80; cursor:default; }
+  .chip.exchanged { border-color:#666; background:rgba(100,100,100,0.1); color:#666; opacity:0.6; }
+  .chip .x2 {
+    position:absolute; top:-6px; right:-6px;
+    background:#f59e0b; color:#000; font-size:9px; font-weight:900;
+    border-radius:50%; width:15px; height:15px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .friend-card {
+    margin-bottom:12px; background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.08); border-radius:12px; overflow:hidden;
+  }
+  .friend-head {
+    display:flex; align-items:center; gap:10px; padding:12px 16px; cursor:pointer;
+  }
+  .friend-head.open { background:rgba(255,255,255,0.04); border-bottom:1px solid rgba(255,255,255,0.07); }
+  .avatar {
+    width:36px; height:36px; border-radius:50%;
+    background:linear-gradient(135deg,#e94560,#0f3460);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900; font-size:15px; color:#fff; flex-shrink:0;
+  }
+  .friend-name { font-weight:700; font-size:14px; }
+  .friend-meta { font-size:12px; color:#888; margin-top:1px; }
+  .friend-detail { padding:14px 16px; }
+  .country-label { font-size:12px; color:#888; margin-bottom:6px;
+                   display:flex; align-items:center; gap:6px;
+                   text-transform:uppercase; letter-spacing:0.5px; }
+  .delete-btn {
+    padding:6px 14px; border-radius:8px; font-size:12px; cursor:pointer;
+    background:transparent; border:1px solid rgba(233,69,96,0.3); color:#e94560;
+  }
+  .confirm-cambio-btn {
+    padding:6px 14px; border-radius:8px; font-size:12px; cursor:pointer;
+    background:linear-gradient(90deg,#22c55e,#16a34a); border:none; color:#fff;
+    font-weight:700; margin-right:8px;
+  }
+  .footer {
+    position:fixed; bottom:0; left:0; right:0;
+    background:rgba(10,10,10,0.95); border-top:1px solid rgba(255,255,255,0.06);
+    padding:7px 16px; text-align:center; font-size:11px; color:#555;
+  }
+  .footer span { color:#e94560; }
+  .empty { text-align:center; color:#555; margin-top:40px; font-size:14px; }
+  .share-btn {
+    background:#25D366; color:#fff; border:none; padding:8px 14px;
+    border-radius:8px; font-weight:700; font-size:13px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:6px; margin-top:8px;
+  }
+
+  /* Admin form section */
+  .admin-section {
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px; padding:16px; margin-bottom:16px;
+  }
+  .section-title {
+    font-size:13px; font-weight:800; color:#fbbf24;
+    text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .form-row { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+  .form-input {
+    padding:10px 12px; border-radius:8px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15);
+    color:#fff; font-size:14px; outline:none;
+  }
+  .form-input.flex { flex:1; min-width:120px; }
+  .form-input.num { width:80px; text-align:center; }
+  select.form-input { background:#1a1a2e; cursor:pointer; }
+  .add-btn {
+    padding:10px 16px; border-radius:8px; border:none;
+    background:#fbbf24; color:#000; font-weight:800; font-size:13px;
+    cursor:pointer; letter-spacing:0.5px;
+  }
+  .add-btn:disabled { background:#444; color:#888; cursor:default; }
+
+  /* History */
+  .history-item {
+    background:rgba(74,222,128,0.05); border-left:3px solid #4ade80;
+    padding:10px 12px; margin-bottom:8px; border-radius:6px;
+    font-size:13px;
+  }
+  .history-time { color:#666; font-size:11px; margin-top:3px; }
+  .history-friend { color:#4ade80; font-weight:700; }
+  .history-stickers { color:#ccc; margin-top:4px; font-size:12px; }
+
+  .toast {
+    position:fixed; top:80px; left:50%; transform:translateX(-50%);
+    background:#4ade80; color:#000; padding:10px 20px; border-radius:8px;
+    font-weight:700; font-size:13px; z-index:100;
+    animation: toastIn 0.3s ease;
+  }
+  @keyframes toastIn { from { opacity:0; transform:translate(-50%,-10px); } to { opacity:1; transform:translate(-50%,0); } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="center">
+  <div class="card" id="loginCard">
+    <div class="star">⭐</div>
+    <h2>Figuritas Repetidas</h2>
+    <div class="subtitle">RAMI</div>
+    <p class="hint">¿Cómo te llamás?</p>
+    <input id="nameInput" class="input" placeholder="Tu nombre..." autocomplete="off" />
+    <div id="adminFields" class="hidden">
+      <div class="admin-label"><span>🔒</span><span>Acceso de administrador</span></div>
+      <input id="passInput" class="input admin" type="password" placeholder="Código..." />
+      <p id="errMsg" class="err-msg hidden">Código incorrecto</p>
+    </div>
+    <button id="loginBtn" class="btn" disabled>Continuar →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <div class="header">
+    <div class="header-inner">
+      <span style="font-size:22px;">⭐</span>
+      <div style="flex:1;">
+        <h1>Figuritas Repetidas <span>Rami</span></h1>
+        <div id="userBadge" class="header-sub">👤</div>
+      </div>
+      <button class="logout-btn" id="logoutBtn">Salir</button>
+    </div>
+  </div>
+  <div class="body" id="bodyContent"></div>
+</div>
+
+<div class="footer">
+  Datos compartidos en tiempo real · <span>Figuritas Repetidas Rami</span>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIG - REEMPLAZAR CON TU FIREBASE CONFIG
+// ═══════════════════════════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyABC123...",
+  authDomain: "figuritas-rami.firebaseapp.com",
+  databaseURL: "https://figuritas-rami-default-rtdb.firebaseio.com",
+  projectId: "figuritas-rami",
+  storageBucket: "figuritas-rami.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abc123"
+};
+const OWNER = "Rami";
+const PASSWORD = "Ramirez";
+
+// Lista inicial - solo se usa si el storage está vacío.
+// Una vez que la app cargue, las figuritas viven en Firebase y se editan desde admin.
+const initialStickerData = {
+  Argentina:[8], Uruguay:[6,7], Escocia:[19], "Irán":[20,20],
+  Francia:[11], Paraguay:[4,5,8,9,12,14,17,18],
+  Marruecos:[5,9,12,14,17,18], Australia:[7], Irak:[6,18],
+  "Sudáfrica":[5,14,18], Suiza:[11], "Túnez":[8,12], Senegal:[2,3],
+  Qatar:[15,19], "México":[6,11], Holanda:[5], "Panamá":[16,20],
+  "Costa de Marfil":[9,18], Alemania:[9], Austria:[18], "Japón":[3],
+};
+
+const FLAGS = {
+  Argentina:"🇦🇷", Uruguay:"🇺🇾", Escocia:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", "Irán":"🇮🇷", Francia:"🇫🇷",
+  Paraguay:"🇵🇾", Marruecos:"🇲🇦", Australia:"🇦🇺", Irak:"🇮🇶", "Sudáfrica":"🇿🇦",
+  Suiza:"🇨🇭", "Túnez":"🇹🇳", Senegal:"🇸🇳", Qatar:"🇶🇦", "México":"🇲🇽",
+  Holanda:"🇳🇱", "Panamá":"🇵🇦", "Costa de Marfil":"🇨🇮", Alemania:"🇩🇪",
+  Austria:"🇦🇹", "Japón":"🇯🇵",
+};
+
+// Common countries list for the admin dropdown (extended set)
+const ALL_COUNTRIES = [
+  "Argentina","Uruguay","Brasil","Chile","Paraguay","Bolivia","Ecuador","Perú","Colombia","Venezuela",
+  "México","Costa Rica","Panamá","Estados Unidos","Canadá",
+  "Inglaterra","Escocia","Gales","Irlanda","Francia","Alemania","España","Italia","Portugal","Países Bajos","Holanda","Bélgica","Suiza","Austria","Polonia","Dinamarca","Suecia","Croacia","Serbia",
+  "Marruecos","Túnez","Senegal","Camerún","Ghana","Sudáfrica","Costa de Marfil","Nigeria","Argelia","Egipto",
+  "Japón","Corea del Sur","Arabia Saudita","Irán","Irak","Qatar","Australia","Nueva Zelanda",
+];
+
+// State
+let state = {
+  userName: null,
+  data: { stickers: {}, requests: {}, history: [] },
+  expanded: null,
+  adminTab: "pedidos", // pedidos | agregar | historial
+};
+
+// ═══════════════════ STICKER BUILDING ═══════════════════
+function buildStickersList(stickerData) {
+  const list = [];
+  for (const [country, nums] of Object.entries(stickerData || {})) {
+    const seen = {};
+    for (const num of nums) {
+      seen[num] = (seen[num] || 0) + 1;
+      list.push({
+        stickerKey: `${country}-${num}-${seen[num]}`,
+        country, number: num, copy: seen[num]
+      });
+    }
+  }
+  return list;
+}
+
+function getAllStickers() {
+  return buildStickersList(state.data.stickers || {});
+}
+
+function getCountries() {
+  return [...new Set(getAllStickers().map(s => s.country))];
+}
+
+// ═══════════════════ FIREBASE ═══════════════════
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+const dataRef = ref(db, "figuritas-rami-v2");
+
+function sanitize(s) {
+  return String(s).replace(/[.#$\[\]\/]/g, "_");
+}
+
+onValue(dataRef, (snapshot) => {
+  const val = snapshot.val();
+  if (val) {
+    state.data = {
+      stickers: val.stickers || {},
+      requests: val.requests || {},
+      history: val.history || [],
+    };
+    // Ensure arrays
+    for (const k of Object.keys(state.data.requests)) {
+      const r = state.data.requests[k];
+      if (!r.wantedKeys) r.wantedKeys = [];
+      if (!r.confirmedKeys) r.confirmedKeys = [];
+      if (!r.exchangedKeys) r.exchangedKeys = [];
+    }
+  } else {
+    // First time: seed with initial sticker data
+    state.data = { stickers: { ...initialStickerData }, requests: {}, history: [] };
+    save(state.data);
+  }
+  if (state.userName) renderApp();
+});
+
+async function save(newData) {
+  // Firebase doesn't accept undefined and dislikes empty arrays sometimes; keep clean
+  const clean = {
+    stickers: newData.stickers || {},
+    requests: newData.requests || {},
+    history: newData.history || [],
+  };
+  await set(dataRef, clean);
+}
+
+// ═══════════════════ LOGIN ═══════════════════
+const nameInput = document.getElementById("nameInput");
+const passInput = document.getElementById("passInput");
+const adminFields = document.getElementById("adminFields");
+const loginBtn = document.getElementById("loginBtn");
+const errMsg = document.getElementById("errMsg");
+const loginCard = document.getElementById("loginCard");
+
+function isAdmin() {
+  return nameInput.value.trim().toLowerCase() === OWNER.toLowerCase();
+}
+
+function updateLoginUI() {
+  const admin = isAdmin();
+  adminFields.classList.toggle("hidden", !admin);
+  loginBtn.textContent = admin ? "Entrar como admin →" : "Continuar →";
+  const valid = nameInput.value.trim() && (!admin || passInput.value.trim());
+  loginBtn.disabled = !valid;
+}
+
+nameInput.addEventListener("input", updateLoginUI);
+passInput.addEventListener("input", updateLoginUI);
+
+function submitLogin() {
+  const name = nameInput.value.trim();
+  if (!name) return;
+  if (isAdmin()) {
+    if (passInput.value.trim().toLowerCase() === PASSWORD.toLowerCase()) {
+      state.userName = OWNER;
+      showApp();
+    } else {
+      loginCard.classList.add("err");
+      passInput.classList.add("err");
+      errMsg.classList.remove("hidden");
+      passInput.value = "";
+      setTimeout(() => {
+        loginCard.classList.remove("err");
+        passInput.classList.remove("err");
+        errMsg.classList.add("hidden");
+      }, 1800);
+    }
+  } else {
+    state.userName = name;
+    showApp();
+  }
+}
+
+loginBtn.addEventListener("click", submitLogin);
+nameInput.addEventListener("keydown", e => { if (e.key === "Enter" && !isAdmin()) submitLogin(); });
+passInput.addEventListener("keydown", e => { if (e.key === "Enter") submitLogin(); });
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  state.userName = null;
+  state.adminTab = "pedidos";
+  nameInput.value = "";
+  passInput.value = "";
+  updateLoginUI();
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("login").classList.remove("hidden");
+});
+
+function showApp() {
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("userBadge").textContent =
+    state.userName === OWNER ? "🔑 Admin" : `👤 ${state.userName}`;
+  renderApp();
+}
+
+// ═══════════════════ TOAST ═══════════════════
+function toast(msg) {
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+
+// ═══════════════════ RENDER ═══════════════════
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+function renderApp() {
+  const body = document.getElementById("bodyContent");
+  if (state.userName === OWNER) {
+    body.innerHTML = renderAdmin();
+    attachAdminHandlers();
+  } else {
+    body.innerHTML = renderFriend();
+    attachFriendHandlers();
+  }
+}
+
+// ─── FRIEND VIEW ───
+function renderFriend() {
+  const name = state.userName;
+  const allStickers = getAllStickers();
+  const countries = getCountries();
+  const my = state.data.requests[sanitize(name)] || { wantedKeys: [], confirmedKeys: [], exchangedKeys: [] };
+  const wanted = new Set(my.wantedKeys || []);
+  const confirmed = new Set(my.confirmedKeys || []);
+  const exchangedGlobal = getGlobalExchangedKeys();
+
+  let html = `
+    <div class="greet">
+      <span style="font-size:24px;">👋</span>
+      <div>
+        <div class="greet-title">Hola, ${escapeHtml(name)}!</div>
+        <div class="greet-sub">Tocá las figuritas que te interesan. ${OWNER} las va a confirmar.</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat stat-w"><div class="stat-num">${wanted.size}</div><div class="stat-label">Pedidas</div></div>
+      <div class="stat stat-c"><div class="stat-num">${confirmed.size}</div><div class="stat-label">Confirmadas ✓</div></div>
+    </div>
+  `;
+
+  if (countries.length === 0) {
+    html += `<div class="empty">Todavía no hay figuritas cargadas.</div>`;
+    return html;
+  }
+
+  for (const country of countries) {
+    const stickers = allStickers.filter(s => s.country === country);
+    // hide countries where ALL stickers were exchanged
+    const visible = stickers.filter(s => !exchangedGlobal.has(s.stickerKey));
+    if (visible.length === 0) continue;
+    html += `<div class="country-box">
+      <div class="country-head"><span style="font-size:17px;">${FLAGS[country]||"🏳️"}</span><span class="country-name">${escapeHtml(country)}</span></div>
+      <div class="chips">`;
+    for (const s of visible) {
+      const cls = confirmed.has(s.stickerKey) ? "chip confirmed" : wanted.has(s.stickerKey) ? "chip wanted" : "chip";
+      html += `<button class="${cls}" data-key="${escapeHtml(s.stickerKey)}">#${s.number}${s.copy>1?'<span class="x2">×2</span>':''}${confirmed.has(s.stickerKey)?' ✓':''}</button>`;
+    }
+    html += `</div></div>`;
+  }
+  return html;
+}
+
+function attachFriendHandlers() {
+  const name = state.userName;
+  document.querySelectorAll(".chip").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const key = btn.dataset.key;
+      const safeName = sanitize(name);
+      const my = state.data.requests[safeName] || { wantedKeys: [], confirmedKeys: [], exchangedKeys: [] };
+      const confirmed = my.confirmedKeys || [];
+      if (confirmed.includes(key)) return;
+      const wanted = new Set(my.wantedKeys || []);
+      if (wanted.has(key)) wanted.delete(key); else wanted.add(key);
+      const newRequests = { ...state.data.requests, [safeName]: {
+        displayName: name,
+        wantedKeys: [...wanted],
+        confirmedKeys: confirmed,
+        ts: Date.now()
+      }};
+      await save({ ...state.data, requests: newRequests });
+    });
+  });
+}
+
+// ─── ADMIN VIEW ───
+function getGlobalExchangedKeys() {
+  // Keys that were exchanged (in history) — they should disappear from the available list
+  const set = new Set();
+  for (const h of state.data.history || []) {
+    for (const k of h.stickerKeys || []) set.add(k);
+  }
+  return set;
+}
+
+function renderAdmin() {
+  let html = `
+    <div class="admin-bar">
+      <span style="font-size:20px;">🔑</span>
+      <div style="flex:1; font-size:13px; color:#ccc;">
+        Vista de <b style="color:#e94560;">${OWNER}</b>
+      </div>
+      <button class="btn-ghost" id="shareBtn">📤 Compartir</button>
+    </div>
+    <div class="tabs">
+      <div class="tab ${state.adminTab==='pedidos'?'active':''}" data-tab="pedidos">📋 Pedidos</div>
+      <div class="tab ${state.adminTab==='agregar'?'active':''}" data-tab="agregar">➕ Agregar</div>
+      <div class="tab ${state.adminTab==='historial'?'active':''}" data-tab="historial">📜 Historial</div>
+    </div>
+  `;
+
+  if (state.adminTab === "pedidos") html += renderPedidosTab();
+  else if (state.adminTab === "agregar") html += renderAgregarTab();
+  else if (state.adminTab === "historial") html += renderHistorialTab();
+
+  return html;
+}
+
+function renderPedidosTab() {
+  const requests = state.data.requests || {};
+  const friendKeys = Object.keys(requests);
+
+  if (friendKeys.length === 0) {
+    return `<div class="empty">
+      Todavía nadie pidió figuritas.<br/>
+      <button class="share-btn" id="shareEmptyBtn">💬 Compartir por WhatsApp</button>
+    </div>`;
+  }
+
+  const allStickers = getAllStickers();
+  let html = "";
+
+  for (const key of friendKeys) {
+    const fr = requests[key];
+    const displayName = fr.displayName || key;
+    const wanted = fr.wantedKeys || [];
+    const confirmed = fr.confirmedKeys || [];
+    const pending = wanted.filter(k => !confirmed.includes(k));
+    const isOpen = state.expanded === key;
+
+    html += `<div class="friend-card">
+      <div class="friend-head ${isOpen?"open":""}" data-friend="${escapeHtml(key)}">
+        <div class="avatar">${escapeHtml(displayName[0].toUpperCase())}</div>
+        <div style="flex:1;">
+          <div class="friend-name">${escapeHtml(displayName)}</div>
+          <div class="friend-meta">`;
+    if (pending.length > 0) html += `<span style="color:#fbbf24;">⏳ ${pending.length} pendiente${pending.length>1?"s":""}</span> `;
+    if (confirmed.length > 0) html += `<span style="color:#4ade80;">✓ ${confirmed.length} confirmada${confirmed.length>1?"s":""}</span>`;
+    if (pending.length === 0 && confirmed.length === 0) html += `<span style="color:#555;">Sin pedidos</span>`;
+    html += `</div></div>
+        <span style="color:#555;">${isOpen?"▲":"▼"}</span>
+      </div>`;
+
+    if (isOpen) {
+      html += `<div class="friend-detail">`;
+      if (wanted.length === 0) html += `<p style="color:#555; font-size:13px;">No pidió ninguna figurita todavía.</p>`;
+
+      const countriesUsed = [...new Set(wanted.map(k => allStickers.find(x => x.stickerKey === k)?.country).filter(Boolean))];
+      for (const country of countriesUsed) {
+        const countryKeys = wanted.filter(k => allStickers.find(x => x.stickerKey === k)?.country === country);
+        html += `<div style="margin-bottom:12px;">
+          <div class="country-label"><span>${FLAGS[country]||"🏳️"}</span><span>${escapeHtml(country)}</span></div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">`;
+        for (const k of countryKeys) {
+          const s = allStickers.find(x => x.stickerKey === k);
+          if (!s) continue;
+          const isConf = confirmed.includes(k);
+          html += `<button class="chip ${isConf?"confirmed":"wanted"}" data-friend-key="${escapeHtml(key)}" data-sticker="${escapeHtml(k)}">#${s.number}${isConf?' ✓':''}</button>`;
+        }
+        html += `</div></div>`;
+      }
+      html += `<div style="display:flex; justify-content:flex-end; margin-top:10px; gap:8px;">`;
+      if (confirmed.length > 0) {
+        html += `<button class="confirm-cambio-btn" data-cambio="${escapeHtml(key)}">✓ Cambio realizado</button>`;
+      }
+      html += `<button class="delete-btn" data-delete="${escapeHtml(key)}">🗑 Eliminar</button>
+      </div></div>`;
+    }
+    html += `</div>`;
+  }
+  return html;
+}
+
+function renderAgregarTab() {
+  const stickers = state.data.stickers || {};
+  const existingCountries = Object.keys(stickers).sort();
+
+  // Combine ALL_COUNTRIES with existing
+  const countriesForDropdown = [...new Set([...existingCountries, ...ALL_COUNTRIES])].sort();
+
+  let html = `
+    <div class="admin-section">
+      <div class="section-title"><span>➕</span><span>Agregar figurita repetida</span></div>
+      <div class="form-row">
+        <select id="addCountry" class="form-input flex">
+          <option value="">— País —</option>`;
+  for (const c of countriesForDropdown) {
+    html += `<option value="${escapeHtml(c)}">${FLAGS[c]||"🏳️"} ${escapeHtml(c)}</option>`;
+  }
+  html += `</select>
+        <input id="addNumber" type="number" min="1" class="form-input num" placeholder="N°" />
+        <button id="addBtn" class="add-btn">Agregar</button>
+      </div>
+      <div style="font-size:11px; color:#666; margin-top:4px;">
+        Si la figurita ya existe en el listado, se agrega como duplicado adicional (×2, ×3, etc).
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <div class="section-title"><span>📦</span><span>Inventario actual</span></div>`;
+
+  const allStickers = getAllStickers();
+  const exchangedSet = getGlobalExchangedKeys();
+  const availableCount = allStickers.filter(s => !exchangedSet.has(s.stickerKey)).length;
+
+  html += `<div style="font-size:12px; color:#888; margin-bottom:10px;">
+    <b style="color:#fff;">${availableCount}</b> figuritas disponibles
+    ${exchangedSet.size > 0 ? `· <span style="color:#666;">${exchangedSet.size} ya cambiadas</span>`:''}
+  </div>`;
+
+  const countries = getCountries();
+  if (countries.length === 0) {
+    html += `<div style="color:#555; font-size:13px;">Todavía no hay figuritas cargadas.</div>`;
+  }
+
+  for (const country of countries) {
+    const countryStickers = allStickers.filter(s => s.country === country);
+    html += `<div class="country-box" style="margin-bottom:8px;">
+      <div class="country-head">
+        <span style="font-size:17px;">${FLAGS[country]||"🏳️"}</span>
+        <span class="country-name">${escapeHtml(country)}</span>
+        <span style="margin-left:auto; font-size:11px; color:#666;">${countryStickers.filter(s=>!exchangedSet.has(s.stickerKey)).length} disp.</span>
+      </div>
+      <div class="chips">`;
+    for (const s of countryStickers) {
+      const isExchanged = exchangedSet.has(s.stickerKey);
+      html += `<div class="chip ${isExchanged?'exchanged':''}" style="cursor:default;">
+        #${s.number}${s.copy>1?'<span class="x2">×2</span>':''}${isExchanged?' ✓':''}
+      </div>`;
+    }
+    html += `</div></div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function renderHistorialTab() {
+  const history = (state.data.history || []).slice().reverse();
+  const allStickers = getAllStickers();
+
+  let html = `<div class="admin-section">
+    <div class="section-title"><span>📜</span><span>Historial de cambios</span></div>`;
+
+  if (history.length === 0) {
+    html += `<div style="color:#555; font-size:13px; text-align:center; padding:20px;">
+      Todavía no registraste ningún cambio.<br/>
+      <span style="font-size:11px;">Cuando confirmes un cambio con un amigo (en pedidos → "Cambio realizado"), aparecerá acá.</span>
+    </div>`;
+  } else {
+    let totalExchanged = 0;
+    for (const h of history) totalExchanged += (h.stickerKeys||[]).length;
+
+    html += `<div style="font-size:12px; color:#888; margin-bottom:12px;">
+      <b style="color:#fff;">${totalExchanged}</b> figuritas cambiadas en <b style="color:#fff;">${history.length}</b> intercambio${history.length>1?'s':''}
+    </div>`;
+
+    for (const h of history) {
+      const d = new Date(h.timestamp);
+      const dateStr = d.toLocaleDateString("es-AR", { day:"numeric", month:"short", year:"numeric" });
+      const timeStr = d.toLocaleTimeString("es-AR", { hour:"2-digit", minute:"2-digit" });
+      // Group stickers by country
+      const byCountry = {};
+      for (const k of h.stickerKeys || []) {
+        const s = allStickers.find(x => x.stickerKey === k);
+        if (!s) {
+          // sticker no longer in inventory? parse from key
+          const parts = k.split("-");
+          if (parts.length >= 2) {
+            const country = parts.slice(0,-2).join("-") || parts[0];
+            const num = parts[parts.length-2];
+            if (!byCountry[country]) byCountry[country] = [];
+            byCountry[country].push("#"+num);
+          }
+          continue;
+        }
+        if (!byCountry[s.country]) byCountry[s.country] = [];
+        byCountry[s.country].push("#"+s.number);
+      }
+      const stickerStr = Object.entries(byCountry)
+        .map(([c, nums]) => `${FLAGS[c]||"🏳️"} ${c}: ${nums.join(", ")}`)
+        .join(" · ");
+
+      html += `<div class="history-item">
+        <div><span class="history-friend">${escapeHtml(h.friendName)}</span></div>
+        <div class="history-stickers">${stickerStr}</div>
+        <div class="history-time">${dateStr} · ${timeStr}</div>
+      </div>`;
+    }
+  }
+  html += `</div>`;
+  return html;
+}
+
+function attachAdminHandlers() {
+  // Tabs
+  document.querySelectorAll(".tab").forEach(t => {
+    t.addEventListener("click", () => {
+      state.adminTab = t.dataset.tab;
+      state.expanded = null;
+      renderApp();
+    });
+  });
+
+  // Share
+  const shareBtn = document.getElementById("shareBtn");
+  if (shareBtn) shareBtn.addEventListener("click", shareWhatsapp);
+  const shareEmptyBtn = document.getElementById("shareEmptyBtn");
+  if (shareEmptyBtn) shareEmptyBtn.addEventListener("click", shareWhatsapp);
+
+  // PEDIDOS tab handlers
+  document.querySelectorAll(".friend-head").forEach(el => {
+    el.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      const f = el.dataset.friend;
+      state.expanded = state.expanded === f ? null : f;
+      renderApp();
+    });
+  });
+
+  document.querySelectorAll("[data-sticker]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const friendKey = btn.dataset.friendKey;
+      const sticker = btn.dataset.sticker;
+      const fr = state.data.requests[friendKey];
+      if (!fr) return;
+      const confirmed = fr.confirmedKeys || [];
+      const newConfirmed = confirmed.includes(sticker)
+        ? confirmed.filter(k => k !== sticker)
+        : [...confirmed, sticker];
+      const newRequests = { ...state.data.requests, [friendKey]: {
+        ...fr, confirmedKeys: newConfirmed, ts: Date.now()
+      }};
+      await save({ ...state.data, requests: newRequests });
+    });
+  });
+
+  document.querySelectorAll("[data-cambio]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const friendKey = btn.dataset.cambio;
+      const fr = state.data.requests[friendKey];
+      if (!fr) return;
+      const confirmed = fr.confirmedKeys || [];
+      if (confirmed.length === 0) return;
+      if (!confirm(`¿Registrar el cambio con ${fr.displayName || friendKey}?\nSe van a marcar ${confirmed.length} figurita${confirmed.length>1?'s':''} como cambiadas y se quitarán del inventario disponible.`)) return;
+
+      // Add to history
+      const newHistory = [...(state.data.history||[]), {
+        timestamp: Date.now(),
+        friendName: fr.displayName || friendKey,
+        friendKey,
+        stickerKeys: confirmed,
+      }];
+
+      // Remove confirmed from this friend's request, and also remove them from other friends' pending requests
+      const newRequests = { ...state.data.requests };
+      for (const fk of Object.keys(newRequests)) {
+        const r = newRequests[fk];
+        const newWanted = (r.wantedKeys||[]).filter(k => !confirmed.includes(k));
+        const newConfirmed = fk === friendKey ? [] : (r.confirmedKeys||[]).filter(k => !confirmed.includes(k));
+        newRequests[fk] = { ...r, wantedKeys: newWanted, confirmedKeys: newConfirmed, ts: Date.now() };
+      }
+
+      await save({ ...state.data, requests: newRequests, history: newHistory });
+      state.expanded = null;
+      toast(`✓ Cambio registrado con ${fr.displayName||friendKey}`);
+    });
+  });
+
+  document.querySelectorAll("[data-delete]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const friendKey = btn.dataset.delete;
+      const fr = state.data.requests[friendKey];
+      if (!confirm(`¿Eliminar el pedido de ${fr?.displayName || friendKey}?`)) return;
+      const newRequests = { ...state.data.requests };
+      delete newRequests[friendKey];
+      await save({ ...state.data, requests: newRequests });
+      if (state.expanded === friendKey) state.expanded = null;
+    });
+  });
+
+  // AGREGAR tab
+  const addBtn = document.getElementById("addBtn");
+  if (addBtn) {
+    addBtn.addEventListener("click", async () => {
+      const countrySel = document.getElementById("addCountry");
+      const numInput = document.getElementById("addNumber");
+      const country = countrySel.value.trim();
+      const num = parseInt(numInput.value, 10);
+      if (!country || !num || num < 1) {
+        toast("Completá país y número");
+        return;
+      }
+      const stickers = { ...(state.data.stickers || {}) };
+      const list = stickers[country] ? [...stickers[country]] : [];
+      list.push(num);
+      stickers[country] = list;
+      await save({ ...state.data, stickers });
+      numInput.value = "";
+      toast(`✓ Agregada: ${country} #${num}`);
+      // refocus number for fast multi-add
+      numInput.focus();
+    });
+  }
+}
+
+function shareWhatsapp() {
+  const url = window.location.href.split("?")[0].split("#")[0];
+  const msg = `¡Hola! Estas son las figuritas repetidas que tengo del Mundial 🌟\n\nEntrá al link y marcá las que te interesen para que las cambiemos:\n${url}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+}
+
+updateLoginUI();
+</script>
+</body>
+</html>
